@@ -1,0 +1,88 @@
+import {test, expect,request} from '@playwright/test';
+import { validateHeaderValue } from 'node:http';
+let token;
+
+
+const loginPayload = {userEmail: 'anshika@gmail.com', userPassword: 'Anishika@123'};
+
+test.beforeAll(async () => {
+    const apiContext = await request.newContext();
+    const loginResponse = await apiContext.post('https://rahulshettyacademy.com/api/ecom/auth/login', {
+        data: loginPayload
+    })
+    expect(loginResponse.status()).toBe(200);
+    const loginResponseJson = await loginResponse.json();
+    console.log(loginResponseJson);
+    const token = loginResponseJson.token;
+    console.log(token);
+});
+
+test('Api login and place order', async ({page, request}) => {
+
+    const allproductTitles = page.locator('.card-body b');
+    const productName = "zara coat 3";
+    // await page.goto('https://rahulshettyacademy.com/client/#/dashboard/dash');
+    // await page.locator('#userEmail').fill('prrasad19845@gmail.com');
+    // await page.locator('#userPassword').fill('Prasad@2026');
+    // await page.locator('#login').click();
+    // await page.waitForLoadState('networkidle');
+
+    await page.addInitScript(value => {
+        window.localStorage.setItem('token', value);
+    }, token);
+
+    await page.goto('https://rahulshettyacademy.com/client/#/dashboard/dash');
+
+    await page.locator(".card-body b").last().waitFor();
+    const allTitles = await page.locator(".card-body b").allTextContents();
+    console.log(allTitles);
+
+    const count = await allproductTitles.count();
+    for (let i = 0; i < count; ++i) {
+        const product = await allproductTitles.nth(i).locator('b').textContent();
+        if (product === productName) {
+            console.log("Product found");
+             await allproductTitles.nth(i).locator('b').click();
+            break;
+        }
+    }
+    await page.locator('[routerlink*="cart"]').click();
+    await page.locator('div li').first().waitFor();
+    const bool = await page.locator('h3:has-text(\'zara coat 3\')').isVisible();
+    expect(bool).toBeTruthy();
+    await page.locator('text=Checkout').click();
+    await page.locator('[placeholder*="Country"]').pressSequentially('ind', {delay: 100});
+    const dropdown = page.locator('.ta-results');
+    await dropdown.waitFor();
+    const optionsCount = await dropdown.locator('button').count();
+        for (let i = 0; i < optionsCount; ++i) {
+            const text = await dropdown.locator('button').nth(i).textContent();
+            if (text.trim() === "India") {
+                await dropdown.locator('button').nth(i).click();
+                break;
+            }
+        }
+    
+        //order confirmation
+        const email = await page.locator('.user__name [type="text"]').textContent();
+        console.log(email);
+        await page.locator('.action__submit').click();
+        const orderConfirmation = await page.locator('.hero-primary').textContent();
+        expect(orderConfirmation).toBe("THANKYOU FOR THE ORDER.");
+        const orderId = await page.locator('.em-spacer-1 .ng-star-inserted').textContent();
+        console.log(orderId);
+         await page.locator('[routerlink*="myorders"]').click();
+    await page.locator('tbody').waitFor();
+    const rows = await page.locator('tbody tr');
+    const rowCount = await rows.count();
+    for (let i = 0; i < rowCount; ++i) {
+        const rowOrderId = await rows.nth(i).locator('th').textContent();
+        if (orderId.includes(rowOrderId)) {
+            await rows.nth(i).locator('button').click();
+            break;
+             }
+    }
+    //order details validation in order details page
+    const orderDetailsId = await page.locator('.col-text').textContent();
+    expect(orderId.includes(orderDetailsId)).toBeTruthy();
+});
