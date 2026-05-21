@@ -1,0 +1,28 @@
+{
+  "name": "playwright-automation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm playwright test tests/ClientAppOP.spec.js  --headed --reporter=html --reporter=allure-playwright"
+    // "regression": "npm playwright test --grep @regression --headed --reporter=html --reporter=allure-playwright",
+    // "smoke": "npm playwright test --grep @smoke --headed --reporter=html --reporter=allure-playwright",
+    // "allure": "allure generate allure-results --clean -o allure-report",
+    // "generate-allure-report": "all",
+    //"cucumberregression":npx cucumber-js --tags "regression" ,
+    //npx cuccumber-js format html:cucumber-report.html,
+    //npx cucumber-js retry 1,
+    //npx cucumber-js --tags "regression" --retry 1 --exit --format html:cucumber-report.html
+
+    //to run: npm run cucumberregression
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.6.0",
+    "allure-playwright": "^3.8.0"
+  }
+}
